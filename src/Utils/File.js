@@ -1268,53 +1268,11 @@ function savePhoto(photo, message) {
 }
 
 function saveOrDownload(file, fileName, obj, callback) {
-    if (!file) return;
-    if (!fileName) return;
-
-    if (file.arr) {
-        saveData(file.arr, fileName);
-        return;
-    }
-
-    let blob = FileStore.getBlob(file.id) || file.blob;
-    if (blob) {
-        saveBlob(blob, fileName);
-        return;
-    }
-
-    download(file, obj, () => {
-        if (callback) callback();
-
-        blob = FileStore.getBlob(file.id) || file.blob;
-        if (blob) {
-            saveBlob(blob, fileName);
-        }
-    });
+    return;
 }
 
 function download(file, obj, callback) {
-    if (!file) return;
-    const { id, local } = file;
-
-    const blob = FileStore.getBlob(id);
-    if (blob) {
-        return;
-    }
-
-    if (local.is_downloading_completed) {
-        const store = FileStore.getStore();
-
-        FileStore.getLocalFile(store, file, null, callback, () => {
-            if (local.can_be_downloaded) {
-                FileStore.getRemoteFile(file.id, FILE_PRIORITY, obj);
-            }
-        });
-        return;
-    }
-
-    if (local.can_be_downloaded) {
-        FileStore.getRemoteFile(id, FILE_PRIORITY, obj);
-    }
+    return;
 }
 
 export function getViewerMinithumbnail(media) {

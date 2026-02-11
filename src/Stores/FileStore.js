@@ -12,7 +12,7 @@ import WebpManager from './WebpManager';
 import TdLibController from '../Controllers/TdLibController';
 
 const useReadFile = true;
-const useDownloadFile = true;
+const useDownloadFile = false;
 
 class FileStore extends EventEmitter {
     constructor() {

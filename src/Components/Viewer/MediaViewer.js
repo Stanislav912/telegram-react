@@ -27,7 +27,6 @@ import MediaViewerContent from './MediaViewerContent';
 import MediaViewerButton from './MediaViewerButton';
 import MediaViewerFooterText from './MediaViewerFooterText';
 import MediaViewerFooterButton from './MediaViewerFooterButton';
-import MediaViewerDownloadButton from './MediaViewerDownloadButton';
 import { forwardMessages, setMediaViewerContent } from '../../Actions/Client';
 import {
     cancelPreloadMediaViewerContent,
@@ -428,6 +427,7 @@ class MediaViewer extends React.Component {
     };
 
     handleSave = () => {
+        return;
         const { chatId } = this.props;
         const { currentMessageId } = this.state;
 
@@ -857,7 +857,6 @@ class MediaViewer extends React.Component {
                         title={title}
                         subtitle={maxCount > 1 && index >= 0 ? LStore.formatString('Of', maxCount - index, maxCount) : null}
                     />
-                    <MediaViewerDownloadButton title={t('Save')} fileId={fileId} disabled={isEmbedMessage(chatId, currentMessageId)} onClick={this.handleSave} />
                     <MediaViewerFooterButton
                         title={t('Forward')}
                         disabled={!canBeForwarded}
