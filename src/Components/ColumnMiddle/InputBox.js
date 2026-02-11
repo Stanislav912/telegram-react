@@ -9,7 +9,6 @@ import React, { Component } from 'react';
 import classNames from 'classnames';
 import { withTranslation } from 'react-i18next';
 import emojiRegex from 'emoji-regex';
-import MediaRecorder from 'opus-media-recorder';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
@@ -21,24 +20,18 @@ import DoneIcon from '../../Assets/Icons/Done';
 import IconButton from '@material-ui/core/IconButton';
 import InsertEmoticonIcon from '../../Assets/Icons/Smile';
 import SendIcon from '../../Assets/Icons/Send';
-import MicrophoneIcon from '../../Assets/Icons/Microphone';
 import DeleteIcon from '../../Assets/Icons/Delete';
-import AttachButton from './../ColumnMiddle/AttachButton';
-import CreatePollDialog from '../Popup/CreatePollDialog';
 import EditUrlDialog from '../Popup/EditUrlDialog';
 import InputBoxHeader from './InputBoxHeader';
-import PasteFilesDialog from '../Popup/PasteFilesDialog';
-import RecordTimer from './RecordTimer';
-import EditMediaDialog from '../Popup/EditMediaDialog';
 import OutputTypingManager from '../../Utils/OutputTypingManager';
-import { draftEquals, getChatDraft, getChatDraftReplyToMessageId, getChatFullInfo, isMeChat, isPrivateChat, isSupergroup } from '../../Utils/Chat';
+import { draftEquals, getChatDraft, getChatDraftReplyToMessageId, getChatFullInfo, isMeChat, isSupergroup } from '../../Utils/Chat';
 import { findLastTextNode, focusInput } from '../../Utils/DOM';
-import { getMediaDocumentFromFile, getMediaPhotoFromFile, isEditedMedia } from '../../Utils/Media';
+import { isEditedMedia } from '../../Utils/Media';
 import { getEntities, getNodes, isTextMessage } from '../../Utils/Message';
-import { getSize, readImageSize } from '../../Utils/Common';
+import { getSize } from '../../Utils/Common';
 import { editMessage, replyMessage } from '../../Actions/Client';
 import { isDeletedUser, isMeUser } from '../../Utils/User';
-import { PHOTO_SIZE, SEND_BY_CTRL_ENTER_KEY, VOICENOTE_MIN_RECORD_DURATION } from '../../Constants';
+import { PHOTO_SIZE, SEND_BY_CTRL_ENTER_KEY } from '../../Constants';
 import AnimationStore from '../../Stores/AnimationStore';
 import AppStore from '../../Stores/ApplicationStore';
 import ChatStore from '../../Stores/ChatStore';
@@ -56,8 +49,6 @@ class InputBox extends Component {
     constructor(props) {
         super(props);
 
-        this.attachDocumentRef = React.createRef();
-        this.attachPhotoRef = React.createRef();
         this.newMessageRef = React.createRef();
 
         const chatId = AppStore.getChatId();
@@ -248,12 +239,7 @@ class InputBox extends Component {
         }
     };
 
-    onClientUpdateSendFiles = update => {
-        const { files } = update;
-        if (!files) return;
-
-        this.handleSendFiles(Array.from(files));
-    };
+    onClientUpdateSendFiles = () => {};
 
     onUpdateDeleteMessages = update => {
         const { chatId, editMessageId } = this.state;
@@ -596,20 +582,8 @@ class InputBox extends Component {
         return { chatId, draftMessage };
     };
 
-    handleSubmit = (startRecord = true) => {
-        const { chatId, editMessageId, replyToMessageId, recordingReady, recordingTime } = this.state;
-
-        if (recordingTime) {
-            if ((new Date() - recordingTime) < VOICENOTE_MIN_RECORD_DURATION) {
-                return;
-            }
-
-            this.handleStopRecord();
-            return;
-        } else if (recordingReady) {
-            if (startRecord) this.handleRecord();
-            return;
-        }
+    handleSubmit = () => {
+        const { chatId, editMessageId, replyToMessageId } = this.state;
 
         const element = this.newMessageRef.current;
         if (!element) return;
@@ -659,98 +633,6 @@ class InputBox extends Component {
         TdLibController.clientUpdate({
             '@type': 'clientUpdateNewPoll'
         });
-    };
-
-    handleAttachPhoto = () => {
-        if (!this.attachPhotoRef) return;
-
-        this.attachPhotoRef.current.click();
-    };
-
-    async getNewItem(file, sendAsFile) {
-        if (!file) return null;
-
-        const caption = this.newMessageRef.current.innerHTML;
-        if (caption) {
-            this.newMessageRef.current.innerHTML = null;
-            this.handleInput();
-        }
-
-        const media = sendAsFile
-            ? await getMediaPhotoFromFile(file)
-            : await getMediaDocumentFromFile(file);
-
-        return {
-            file,
-            media,
-            caption
-        }
-    };
-
-    handleAttachPhotoComplete = async () => {
-        const { files } = this.attachPhotoRef.current;
-        if (files.length === 0) return;
-
-        if (files.length === 1) {
-            const [ newFile, ...rest ] = Array.from(files);
-            if (!newFile) return;
-
-            const newItem = await this.getNewItem(newFile, true);
-
-            this.setState({
-                openEditMedia: true,
-                newItem
-            });
-        } else {
-            Array.from(files).forEach(async file => {
-                const [width, height] = await readImageSize(file);
-
-                const content = {
-                    '@type': 'inputMessagePhoto',
-                    photo: { '@type': 'inputFileBlob', name: file.name, size: file.size, data: file },
-                    width,
-                    height
-                };
-
-                this.handleSendPhoto(content, file);
-            });
-        }
-
-        this.attachPhotoRef.current.value = '';
-    };
-
-    handleAttachDocument = () => {
-        if (!this.attachDocumentRef) return;
-
-        this.attachDocumentRef.current.click();
-    };
-
-    handleAttachDocumentComplete = async () => {
-        const { files } = this.attachDocumentRef.current;
-        if (files.length === 0) return;
-
-        if (files.length === 1) {
-            const [ newFile, ...rest ] = Array.from(files);
-            if (!newFile) return;
-
-            const newItem = await this.getNewItem(newFile, false);
-
-            this.setState({
-                openEditMedia: true,
-                newItem
-            });
-        } else {
-            Array.from(files).forEach(file => {
-                const content = {
-                    '@type': 'inputMessageDocument',
-                    document: { '@type': 'inputFileBlob', name: file.name, size: file.size, data: file }
-                };
-
-                this.handleSendDocument(content, file);
-            });
-        }
-
-        this.attachDocumentRef.current.value = '';
     };
 
     setTyping() {
@@ -1100,26 +982,6 @@ class InputBox extends Component {
     }
 
     handlePaste = async event => {
-        const { items } = event.clipboardData || event.originalEvent.clipboardData;
-        if (!items) return;
-
-        const files = [];
-        Array.from(items).forEach(item => {
-            if (item.kind.indexOf('file') === 0) {
-                const file = item.getAsFile();
-                if (file) {
-                    files.push(file);
-                }
-            }
-        });
-
-        if (files.length > 0) {
-            event.preventDefault();
-
-            this.handleSendFiles(files);
-            return;
-        }
-
         const plainText = event.clipboardData.getData('text/plain');
         if (plainText) {
             event.preventDefault();
@@ -1237,7 +1099,7 @@ class InputBox extends Component {
         const { chatId, replyToMessageId } = this.state;
 
         if (!chatId) return;
-        if (!content) return;
+        if (!content || content['@type'] !== 'inputMessageText') return;
 
         try {
             await AppStore.invokeScheduledAction(`clientUpdateClearHistory chatId=${chatId}`);
@@ -1754,92 +1616,7 @@ class InputBox extends Component {
         this.handleStopRecord(true);
     }
 
-    handleRecord = async () => {
-        if (this.recorder) return;
-
-        let stream = null;
-        try{
-            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            if (this.recorder) return;
-        } catch { }
-
-        if (!stream) {
-            this.setState({
-                recordPermissionDenied: true
-            });
-            return;
-        }
-
-        const constraints = {
-            channelCount: 1,
-            sampleRate: 48000,
-        };
-
-        const track = stream.getAudioTracks()[0];
-        track.applyConstraints(constraints)
-
-        const options = { mimeType: 'audio/ogg; codecs=opus', audioBitsPerSecond: 64000 };
-        const workerOptions = {
-            encoderWorkerFactory: function () {
-                return new Worker(process.env.PUBLIC_URL + '/opus-media-recorder/encoderWorker.umd.js')
-            },
-            OggOpusEncoderWasmPath: process.env.PUBLIC_URL + '/opus-media-recorder/OggOpusEncoder.wasm'
-        };
-
-        const recorder = new MediaRecorder(stream, options, workerOptions);
-
-        const chunks = [];
-
-        recorder.ondataavailable = e => {
-            chunks.push(e.data);
-        };
-        recorder.onstart = () => {
-
-        };
-        recorder.onstop = () => {
-            TdLibController.clientUpdate({ '@type': 'clientUpdateRecordStop' });
-            this.setState({ recordingTime: null });
-
-            const { cancelled } = this.recorder;
-            this.recorder = null;
-
-            this.loadDraft();
-            if (cancelled) {
-                return;
-            }
-
-            // console.log('stop');
-            const blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
-            const audioURL = window.URL.createObjectURL(blob);
-
-            const audio = new Audio(audioURL);
-            audio.oncanplay = () => {
-                const content = {
-                    '@type': 'inputMessageVoiceNote',
-                    voice_note: { '@type': 'inputFileBlob', name: '', size: blob.size, data: blob },
-                    duration: Math.trunc(audio.duration),
-                    waveform: '',
-                    caption: null
-                };
-
-                this.handleSendVoiceNote(content, blob);
-            };
-        };
-        recorder.onerror = () => {
-            TdLibController.clientUpdate({ '@type': 'clientUpdateRecordError' });
-            this.setState({ recordingTime: null });
-
-            this.loadDraft();
-            // console.log('error', e);
-        };
-
-        this.recorder = recorder;
-        this.recorder.start(50);
-        this.startTime = new Date();
-
-        TdLibController.clientUpdate({ '@type': 'clientUpdateRecordStart' });
-        this.setState({ recordingTime: new Date() });
-    }
+    handleRecord = async () => {};
 
     handleClosePermission = () => {
         this.setState({
@@ -1852,10 +1629,7 @@ class InputBox extends Component {
         const {
             chatId,
             editMessageId,
-            newItem,
             replyToMessageId,
-            files,
-            newDraft,
             defaultText,
             defaultUrl,
             openEditUrl,
@@ -1867,7 +1641,7 @@ class InputBox extends Component {
         } = this.state;
 
         const isMediaEditing = editMessageId > 0 && !isTextMessage(chatId, editMessageId);
-        let icon = (<SpeedDialIcon open={!recordingTime && recordingReady} openIcon={<MicrophoneIcon />} icon={<SendIcon />} />);
+        let icon = (<SpeedDialIcon open={true} icon={<SendIcon />} />);
         if (editMessageId) {
             icon = <DoneIcon/>;
         }
@@ -1908,30 +1682,6 @@ class InputBox extends Component {
                                 />
                             </div>
                             <div className='inputbox-right-column'>
-                                <RecordTimer/>
-                                <input
-                                    ref={this.attachDocumentRef}
-                                    className='inputbox-attach-button'
-                                    type='file'
-                                    multiple='multiple'
-                                    onChange={this.handleAttachDocumentComplete}
-                                />
-                                <input
-                                    ref={this.attachPhotoRef}
-                                    className='inputbox-attach-button'
-                                    type='file'
-                                    multiple='multiple'
-                                    accept='image/*'
-                                    onChange={this.handleAttachPhotoComplete}
-                                />
-                                {!Boolean(editMessageId) && !recordingTime && (
-                                    <AttachButton
-                                        chatId={chatId}
-                                        onAttachPhoto={this.handleAttachPhoto}
-                                        onAttachDocument={this.handleAttachDocument}
-                                        onAttachPoll={this.handleAttachPoll}
-                                    />
-                                )}
 
                                 {/*<IconButton>*/}
                                 {/*<KeyboardVoiceIcon />*/}
@@ -1961,8 +1711,6 @@ class InputBox extends Component {
                         </IconButton>
                     </div>
                 </div>
-                {!isPrivateChat(chatId) && <CreatePollDialog onSend={this.handleSendPoll} />}
-                <PasteFilesDialog files={files} onConfirm={this.handlePasteConfirm} onCancel={this.handlePasteCancel} />
                 {/*<UpdateDraftDialog draft={newDraft} onConfirm={this.handleUpdateDraftConfirm} onCancel={this.handleUpdateDraftCancel}/>*/}
                 <EditUrlDialog
                     open={openEditUrl}
@@ -1970,15 +1718,6 @@ class InputBox extends Component {
                     defaultUrl={defaultUrl}
                     onDone={this.handleDoneEditUrl}
                     onCancel={this.handleCancelEditUrl}
-                />
-                <EditMediaDialog
-                    open={openEditMedia}
-                    chatId={chatId}
-                    messageId={editMessageId}
-                    newItem={newItem}
-                    onEdit={this.handleEditMedia}
-                    onSend={this.handleSendMedia}
-                    onCancel={this.handleCancelEditMedia}
                 />
                 <Dialog
                     transitionDuration={0}

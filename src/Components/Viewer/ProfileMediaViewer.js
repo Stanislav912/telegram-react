@@ -14,10 +14,10 @@ import CloseIcon from '../../Assets/Icons/Close';
 import NavigateBeforeIcon from '../../Assets/Icons/Left';
 import ReplyIcon from '../../Assets/Icons/Share';
 import DeleteIcon from '../../Assets/Icons/Delete';
-import MediaViewerDownloadButton from './MediaViewerDownloadButton';
 import MediaViewerButton from './MediaViewerButton';
 import MediaViewerFooterText from './MediaViewerFooterText';
 import MediaViewerFooterButton from './MediaViewerFooterButton';
+import MediaViewerDownloadButton from './MediaViewerDownloadButton';
 import ProfileMediaViewerContent from './ProfileMediaViewerContent';
 import ProfileMediaInfo from '../Tile/ProfileMediaInfo';
 import { forward, setProfileMediaViewerContent } from '../../Actions/Client';
@@ -174,6 +174,7 @@ class ProfileMediaViewer extends React.Component {
     };
 
     handleSave = () => {
+        return;
         const { chatId } = this.props;
         const { currentIndex, totalCount } = this.state;
 
@@ -416,7 +417,6 @@ class ProfileMediaViewer extends React.Component {
                         subtitle={totalCount > 1 && index >= 0 ? LStore.formatString('Of', index + 1, totalCount) : null}
                     />
                     <div style={{ width: 64 }}/>
-                    <MediaViewerDownloadButton title={t('Save')} fileId={file.id} onClick={this.handleSave} />
                     <MediaViewerDownloadButton title={t('Forward')} fileId={file.id} onClick={this.handleForward}>
                         <ReplyIcon />
                     </MediaViewerDownloadButton>

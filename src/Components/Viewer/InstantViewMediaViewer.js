@@ -19,7 +19,6 @@ import InstantViewMediaViewerContent from './InstantViewMediaViewerContent';
 import MediaViewerButton from './MediaViewerButton';
 import MediaViewerFooterText from './MediaViewerFooterText';
 import MediaViewerFooterButton from './MediaViewerFooterButton';
-import MediaViewerDownloadButton from './MediaViewerDownloadButton';
 import { getBlockCaption, getBlockMedia, getBlockUrl, getValidBlocks, isValidMediaBlock } from '../../Utils/InstantView';
 import { cancelPreloadIVMediaViewerContent, getViewerFile, preloadIVMediaViewerContent, saveMedia } from '../../Utils/File';
 import { getInputMediaContent } from '../../Utils/Media';
@@ -191,6 +190,7 @@ class InstantViewMediaViewer extends React.Component {
     };
 
     handleSave = () => {
+        return;
         const { media } = this.props;
 
         saveMedia(media, null);
@@ -241,7 +241,6 @@ class InstantViewMediaViewer extends React.Component {
                         subtitle={maxCount > 1 && index >= 0 ? LStore.formatString('Of', index + 1, maxCount) : null}
                         style={{ marginLeft: 128 }}
                     />
-                    <MediaViewerDownloadButton title={t('Save')} fileId={file.id} onClick={this.handleSave} />
                     <MediaViewerFooterButton title={t('Forward')} onClick={this.handleForward}>
                         <ReplyIcon />
                     </MediaViewerFooterButton>
